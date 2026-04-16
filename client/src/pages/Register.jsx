@@ -14,9 +14,11 @@ const Register = () => {
 
   const navigate = useNavigate();
 
+  const BASE_URL= import.meta.env.VITE_API_URL;
+
   const handleRegister = async () => {
     try {
-      const res = axios.post("http://localhost:5000/api/auth/register", form);
+      const res = axios.post(`${BASE_URL}/api/auth/register`, form);
 
       alert("Register Successfully");
       navigate("/");

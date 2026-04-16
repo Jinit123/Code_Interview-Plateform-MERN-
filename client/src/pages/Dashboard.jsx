@@ -14,9 +14,11 @@ const token = sessionStorage.getItem("token");
 
   const [roomId, setRoomId] = useState("");
 
+  const BASE_URL= import.meta.env.VITE_API_URL;
+
   const createRoom = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/api/room/create", {},
+      const res = await axios.post(`${BASE_URL}/api/room/create`, {},
         {
           headers: {
             Authorization: `Bearer ${token}`,
