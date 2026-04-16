@@ -25,7 +25,7 @@ const InterviewRoom = () => {
 
     const navigate = useNavigate();
 
-    const BASE_URL= import.meta.env.VITE_API_URL;
+    const BASE_URL = import.meta.env.VITE_API_URL;
 
     const toggleMute = () => {
         if (!localStream) return;
@@ -87,6 +87,9 @@ const InterviewRoom = () => {
 
 
     useEffect(() => {
+
+        setParticipants([user]);
+
         socket.emit("join-room", {
             roomId,
             user
@@ -109,8 +112,22 @@ const InterviewRoom = () => {
             });
         };
 
+        // const handleExistingUsers = (users) => {
+        //     setParticipants(users);
+        // };
+
         const handleExistingUsers = (users) => {
-            setParticipants(users);
+            setParticipants((prev) => {
+                const updated = [...prev];
+
+                users.forEach((u) => {
+                    if (!updated.find((p) => p.name === u.name)) {
+                        updated.push(u);
+                    }
+                });
+
+                return updated;
+            });
         };
 
         const handleUserLeft = (name) => {
