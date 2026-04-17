@@ -58,36 +58,40 @@ io.on("connection", (socket) => {
         socket.join(roomId);
 
         socketUserMap[socket.id] = {
-            ...user,
-            roomId
+            roomId,
+            name: user.name,
+            role: user.role
         };
 
         if (!rooms[roomId]) {
             rooms[roomId] = [];
         }
 
+        // ✅ duplicate avoid
         if (!rooms[roomId].find(u => u.name === user.name)) {
             rooms[roomId].push(user);
         }
 
+        console.log("Room State:", rooms[roomId]);
         console.log(`${user.name} joined room: ${roomId}`);
 
-        socket.emit("existing-users", rooms[roomId]);
+        // ❌ REMOVE these
+        // socket.emit("existing-users", rooms[roomId]);
+        // socket.to(roomId).emit("user-joined", user);
 
-        socket.to(roomId).emit("user-joined", user)
-
+        // ✅ ALWAYS send full updated list
+        io.to(roomId).emit("participants-update", rooms[roomId]);
     });
 
     socket.on("code-change", ({ roomId, code }) => {
-        // console.log("Code received", code);
-        socket.to(roomId).emit("code-update", code)
+        socket.to(roomId).emit("code-update", code);
     });
 
     socket.on("chat-message", ({ roomId, message, user }) => {
         socket.to(roomId).emit("receive-message", {
             message,
             user
-        })
+        });
     });
 
     socket.on("typing", ({ roomId, user }) => {
@@ -118,7 +122,11 @@ io.on("connection", (socket) => {
 
             rooms[roomId] = rooms[roomId]?.filter(u => u.name !== name);
 
-            socket.to(roomId).emit("user-left", name); // 🔥 important
+            // ❌ REMOVE
+            // socket.to(roomId).emit("user-left", name);
+
+            // ✅ SEND FULL UPDATED LIST
+            io.to(roomId).emit("participants-update", rooms[roomId]);
 
             delete socketUserMap[socket.id];
 
