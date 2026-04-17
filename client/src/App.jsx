@@ -1,5 +1,6 @@
 import './App.css'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { Toaster } from "react-hot-toast"
 import InterviewRoom from './pages/InterviewRoom'
 import Login from "./pages/Login"
 import Register from "./pages/Register"
@@ -10,6 +11,7 @@ function App() {
 
   return (
     <div>
+      <Toaster position='top-right' />
       <BrowserRouter>
         <Routes>
           <Route path='/' element={<Login />}></Route>

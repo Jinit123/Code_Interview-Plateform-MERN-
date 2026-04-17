@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Editor from "@monaco-editor/react"
 import axios from "axios"
 import { useRef } from "react";
+import toast from "react-hot-toast"
 
 const InterviewRoom = () => {
     const { roomId } = useParams();
@@ -60,9 +61,22 @@ const InterviewRoom = () => {
         });
 
         // receive audio
+        // peerConnection.current.ontrack = (event) => {
+        //     console.log("Receiving Audio");
+        //     remoteAudioRef.current.srcObject = event.streams[0];
+        // };
+
         peerConnection.current.ontrack = (event) => {
-            console.log("Receiving Audio");
-            remoteAudioRef.current.srcObject = event.streams[0];
+            console.log("🎧 Receiving audio");
+
+            const audioEl = remoteAudioRef.current;
+            audioEl.srcObject = event.streams[0];
+
+            audioEl.play().then(() => {
+                console.log("🔊 Audio playing");
+            }).catch((err) => {
+                console.log("❌ Play blocked:", err);
+            });
         };
 
         // ICE candidate
@@ -129,6 +143,15 @@ const InterviewRoom = () => {
                 if (prev.find((p) => p.name === newUser.name)) return prev;
                 return [...prev, newUser];
             });
+
+            if (newUser.name !== user.name) {
+                toast.success(`${newUser.name} joined the room`, {
+                    style: {
+                        background: "#1f2937",
+                        color: "#fff"
+                    }
+                })
+            }
         };
 
         // const handleExistingUsers = (users) => {
@@ -151,6 +174,8 @@ const InterviewRoom = () => {
 
         const handleUserLeft = (name) => {
             setParticipants((prev) => prev.filter((p) => p.name !== name));
+
+            toast(`$(name) left the room`);
         };
 
         const handleTyping = (userName) => {
@@ -303,7 +328,8 @@ const InterviewRoom = () => {
                     </button>
                 </div>
 
-                <audio ref={remoteAudioRef} autoPlay />
+                {/* <audio ref={remoteAudioRef} autoPlay /> */}
+                <audio ref={remoteAudioRef} autoPlay playsInline controls />
 
                 <div className="flex gap-2">
                     <button
