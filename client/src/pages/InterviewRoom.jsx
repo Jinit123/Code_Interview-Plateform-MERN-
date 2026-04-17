@@ -39,14 +39,20 @@ const InterviewRoom = () => {
     };
 
     const startVoice = async () => {
+
+        console.log("Start Voice Button Clicked");
+
         const stream = await navigator.mediaDevices.getUserMedia({
             audio: true,
             video: false,
         });
 
+        console.log("Mic Access Granted");
+
         setLocalStream(stream);
 
         peerConnection.current = new RTCPeerConnection();
+        console.log("Peer Connection Created");
 
         // send audio track
         stream.getTracks().forEach((track) => {
@@ -55,12 +61,14 @@ const InterviewRoom = () => {
 
         // receive audio
         peerConnection.current.ontrack = (event) => {
+            console.log("Receiving Audio");
             remoteAudioRef.current.srcObject = event.streams[0];
         };
 
         // ICE candidate
         peerConnection.current.onicecandidate = (event) => {
             if (event.candidate) {
+                console.log("Sending ICE");
                 socket.emit("ice-candidate", {
                     roomId,
                     candidate: event.candidate,
@@ -70,10 +78,21 @@ const InterviewRoom = () => {
     };
 
     const createOffer = async () => {
+        console.log("Call Button Clicked");
+
+        if (!peerConnection.current) {
+            console.log("Peer Connection is not ready");
+
+        }
+
         const offer = await peerConnection.current.createOffer();
+        console.log("Offer Created");
+
         await peerConnection.current.setLocalDescription(offer);
 
         socket.emit("offer", { roomId, offer });
+        console.log("Offer Sent");
+
     };
 
     const handleLogout = () => {
@@ -143,19 +162,32 @@ const InterviewRoom = () => {
         };
 
         socket.on("offer", async ({ offer }) => {
+            console.log("Offer Received");
+
+            if (!peerConnection.current) {
+                console.log("Receiver peerconnection NUll");
+
+            }
+
             await peerConnection.current.setRemoteDescription(offer);
 
             const answer = await peerConnection.current.createAnswer();
             await peerConnection.current.setLocalDescription(answer);
 
             socket.emit("answer", { roomId, answer });
+            console.log("Answer Sent");
+
         });
 
         socket.on("answer", async ({ answer }) => {
+            console.log("Answer Received");
+
             await peerConnection.current.setRemoteDescription(answer);
         });
 
         socket.on("ice-candidate", async ({ candidate }) => {
+            console.log("ICE Received");
+
             await peerConnection.current.addIceCandidate(candidate);
         });
 
