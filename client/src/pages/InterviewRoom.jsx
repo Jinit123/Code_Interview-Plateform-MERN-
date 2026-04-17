@@ -96,6 +96,7 @@ const InterviewRoom = () => {
 
         if (!peerConnection.current) {
             console.log("Peer Connection is not ready");
+            return;
 
         }
 
@@ -121,7 +122,11 @@ const InterviewRoom = () => {
 
     useEffect(() => {
 
-        setParticipants([user]);
+        // setParticipants([user]);
+        setParticipants((prev) => {
+            if (prev.find(p => p.name === user.name)) return prev;
+            return [user];
+        });
 
         socket.emit("join-room", {
             roomId,
@@ -175,7 +180,7 @@ const InterviewRoom = () => {
         const handleUserLeft = (name) => {
             setParticipants((prev) => prev.filter((p) => p.name !== name));
 
-            toast(`$(name) left the room`);
+            toast(`${name} left the room`);
         };
 
         const handleTyping = (userName) => {
@@ -191,6 +196,7 @@ const InterviewRoom = () => {
 
             if (!peerConnection.current) {
                 console.log("Receiver peerconnection NUll");
+                return;
 
             }
 
@@ -213,6 +219,7 @@ const InterviewRoom = () => {
         socket.on("ice-candidate", async ({ candidate }) => {
             console.log("ICE Received");
 
+            if (!peerConnection.current) return;
             await peerConnection.current.addIceCandidate(candidate);
         });
 
@@ -235,6 +242,9 @@ const InterviewRoom = () => {
             socket.off("user-left", handleUserLeft);
             socket.off("user-typing", handleTyping);
             socket.off("user-stop-typing", handleStopTyping);
+            socket.off("offer");
+            socket.off("answer");
+            socket.off("ice-candidate");
         };
     }, [roomId]);
 
