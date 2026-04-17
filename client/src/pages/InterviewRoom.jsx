@@ -40,6 +40,59 @@ const InterviewRoom = () => {
         }
     };
 
+    // const startVoice = async () => {
+
+    //     console.log("Start Voice Button Clicked");
+
+    //     const stream = await navigator.mediaDevices.getUserMedia({
+    //         audio: true,
+    //         video: false,
+    //     });
+
+    //     console.log("Mic Access Granted");
+
+    //     setLocalStream(stream);
+
+    //     peerConnection.current = new RTCPeerConnection();
+    //     console.log("Peer Connection Created");
+
+    //     // send audio track
+    //     stream.getTracks().forEach((track) => {
+    //         peerConnection.current.addTrack(track, stream);
+    //     });
+
+    //     // receive audio
+    //     // peerConnection.current.ontrack = (event) => {
+    //     //     console.log("Receiving Audio");
+    //     //     remoteAudioRef.current.srcObject = event.streams[0];
+    //     // };
+
+    //     peerConnection.current.ontrack = (event) => {
+    //         console.log("🎧 Receiving audio");
+
+    //         const audioEl = remoteAudioRef.current;
+    //         audioEl.srcObject = event.streams[0];
+
+    //         audioEl.play().then(() => {
+    //             console.log("🔊 Audio playing");
+    //         }).catch((err) => {
+    //             console.log("❌ Play blocked:", err);
+    //         });
+    //     };
+
+    //     // ICE candidate
+    //     peerConnection.current.onicecandidate = (event) => {
+    //         if (event.candidate) {
+    //             console.log("Sending ICE");
+    //             socket.emit("ice-candidate", {
+    //                 roomId,
+    //                 candidate: event.candidate,
+    //             });
+    //         }
+    //     };
+    // };
+
+
     const startVoice = async () => {
 
         console.log("Start Voice Button Clicked");
@@ -96,10 +149,8 @@ const InterviewRoom = () => {
         console.log("Call Button Clicked");
 
         if (!peerConnection.current) {
-            // console.log("Peer Connection is not ready");
-            // return;
-            console.log("Auto starting voice..");
-            await startVoice();
+            console.log("Please click start voice first");
+            return;
         }
 
         const offer = await peerConnection.current.createOffer();
@@ -257,8 +308,8 @@ const InterviewRoom = () => {
             console.log("Offer Received");
 
             if (!peerConnection.current) {
-                console.log("Auto starting voice (receiver)");
-                await startVoice();
+                console.log("❌ Receiver must click Start Voice first");
+                return;
             }
 
             await peerConnection.current.setRemoteDescription(offer);
@@ -267,12 +318,27 @@ const InterviewRoom = () => {
             await peerConnection.current.setLocalDescription(answer);
 
             socket.emit("answer", { roomId, answer });
-            console.log("Answer Sent");
         });
 
         socket.on("answer", async ({ answer }) => {
             console.log("Answer Received");
-            await peerConnection.current.setRemoteDescription(answer);
+
+            const pc = peerConnection.current;
+
+            if (!pc) return;
+
+            // 🔥 only set once
+            if (pc.currentRemoteDescription) {
+                console.log("⚠️ Remote already set");
+                return;
+            }
+
+            if (pc.signalingState !== "have-local-offer") {
+                console.log("⚠️ Skipping duplicate answer");
+                return;
+            }
+
+            await pc.setRemoteDescription(answer);
         });
 
         socket.on("ice-candidate", async ({ candidate }) => {
@@ -376,23 +442,17 @@ const InterviewRoom = () => {
                 </button>
 
                 <div className="flex gap-2 mb-2">
-                    {/* <button
-                        onClick={startVoice}
-                        className="bg-green-500 px-3 py-1 rounded"
-                    >
-                        Start Voice
-                    </button> */}
+                    <button onClick={startVoice}>
+                        Start Voice 🎤
+                    </button>
 
-                    <button
-                        onClick={createOffer}
-                        className="bg-blue-500 px-3 py-1 rounded"
-                    >
-                        Call
+                    <button onClick={createOffer}>
+                        Call 📞
                     </button>
                 </div>
 
                 {/* <audio ref={remoteAudioRef} autoPlay /> */}
-                <audio ref={remoteAudioRef} autoPlay playsInline controls />
+                <audio ref={remoteAudioRef} autoPlay playsInline />
 
                 <div className="flex gap-2">
                     <button
