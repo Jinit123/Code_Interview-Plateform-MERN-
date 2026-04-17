@@ -11,8 +11,8 @@ function App() {
 
   return (
     <div>
-      <Toaster position='top-right' />
       <BrowserRouter>
+      <Toaster position='top-right' />
         <Routes>
           <Route path='/' element={<Login />}></Route>
           <Route path='/register' element={<Register />}></Route>
