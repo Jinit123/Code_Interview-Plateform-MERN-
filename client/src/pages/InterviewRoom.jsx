@@ -15,6 +15,7 @@ const InterviewRoom = () => {
     const [output, setOutput] = useState("");
     const [participants, setParticipants] = useState([]);
     const [typingUser, setTypingUser] = useState("");
+    const [callStatus, setCallStatus] = useState("idle");
 
     const [isMuted, setIsMuted] = useState(false);
     const [localStream, setLocalStream] = useState(null);
@@ -95,9 +96,10 @@ const InterviewRoom = () => {
         console.log("Call Button Clicked");
 
         if (!peerConnection.current) {
-            console.log("Peer Connection is not ready");
-            return;
-
+            // console.log("Peer Connection is not ready");
+            // return;
+            console.log("Auto starting voice..");
+            await startVoice();
         }
 
         const offer = await peerConnection.current.createOffer();
@@ -195,8 +197,9 @@ const InterviewRoom = () => {
             console.log("Offer Received");
 
             if (!peerConnection.current) {
-                console.log("Receiver peerconnection NUll");
-                return;
+                // console.log("Receiver peerconnection NUll");
+                console.log("Auto starting voice (receiver)");
+                await startVoice();
 
             }
 
@@ -312,6 +315,16 @@ const InterviewRoom = () => {
                 <div>
                     <h2 className="font-semibold text-sm md:text-base">Room: {roomId}</h2>
                     <p className="text-xs md:text-sm text-gray-400">User: {user.name}</p>
+
+                    <p className="text-xs mt-1 font-medium">
+                        {callStatus === "calling" && (
+                            <span className="text-yellow-400 animate-pulse">📞 Calling...</span>
+                        )}
+                        {callStatus === "connected" && (
+                            <span className="text-green-400">🎧 Connected</span>
+                        )}
+                    </p>
+
                 </div>
 
                 <button
@@ -323,12 +336,12 @@ const InterviewRoom = () => {
                 </button>
 
                 <div className="flex gap-2 mb-2">
-                    <button
+                    {/* <button
                         onClick={startVoice}
                         className="bg-green-500 px-3 py-1 rounded"
                     >
                         Start Voice
-                    </button>
+                    </button> */}
 
                     <button
                         onClick={createOffer}
