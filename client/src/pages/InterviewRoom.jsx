@@ -120,6 +120,18 @@ const InterviewRoom = () => {
         navigate("/");
     };
 
+    useEffect(() => {
+        console.log("Socket ID:", socket.id);
+
+        socket.on("connect", () => {
+            console.log("✅ Socket Connected:", socket.id);
+        });
+
+        socket.on("connect_error", (err) => {
+            console.log("❌ Socket Error:", err.message);
+        });
+
+    }, []);
 
 
     // useEffect(() => {
@@ -235,7 +247,6 @@ const InterviewRoom = () => {
             setTypingUser("");
         };
 
-        // 🔥 SOCKET EVENTS
         socket.on("participants-update", handleParticipants);
         socket.on("code-update", handleCodeUpdate);
         socket.on("receive-message", handleMessage);

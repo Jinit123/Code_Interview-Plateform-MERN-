@@ -7,7 +7,7 @@ const roomRoutes = require("./routes/roomRoutes");
 const authMiddleware = require("./middleware/authMiddleware");
 const checkRole = require("./middleware/checkRole");
 const http = require("http")
-const { Server } = require("socket.io")
+const { Server } = require("socket.io");
 
 dotenv.config();
 
@@ -55,6 +55,9 @@ io.on("connection", (socket) => {
     console.log("User Connected", socket.id);
 
     socket.on("join-room", ({ roomId, user }) => {
+
+        console.log("Join Event Received", user, roomId);
+
         socket.join(roomId);
 
         socketUserMap[socket.id] = {
@@ -72,14 +75,12 @@ io.on("connection", (socket) => {
             rooms[roomId].push(user);
         }
 
+        console.log("Sending Participants:", rooms[roomId]);
+
+
         console.log("Room State:", rooms[roomId]);
         console.log(`${user.name} joined room: ${roomId}`);
 
-        // ❌ REMOVE these
-        // socket.emit("existing-users", rooms[roomId]);
-        // socket.to(roomId).emit("user-joined", user);
-
-        // ✅ ALWAYS send full updated list
         io.to(roomId).emit("participants-update", rooms[roomId]);
     });
 
@@ -122,10 +123,8 @@ io.on("connection", (socket) => {
 
             rooms[roomId] = rooms[roomId]?.filter(u => u.name !== name);
 
-            // ❌ REMOVE
-            // socket.to(roomId).emit("user-left", name);
+            console.log("After Disconnect:", rooms[roomId]);
 
-            // ✅ SEND FULL UPDATED LIST
             io.to(roomId).emit("participants-update", rooms[roomId]);
 
             delete socketUserMap[socket.id];
