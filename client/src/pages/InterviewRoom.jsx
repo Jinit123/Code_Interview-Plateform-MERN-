@@ -185,89 +185,7 @@ const InterviewRoom = () => {
     }, []);
 
 
-    // useEffect(() => {
-
-    //     socket.emit("join-room", {
-    //         roomId,
-    //         user
-    //     });
-
-    //     // code sync
-    //     const handleCodeUpdate = (newCode) => {
-    //         setCode(newCode);
-    //     };
-
-    //     // chat receive
-    //     const handleMessage = (data) => {
-    //         setMessages((prev) => [...prev, data]);
-    //     };
-
-    //     socket.on("participants-update", (users) => {
-    //         console.log("Participants Updated:", users);
-    //         setParticipants(users);
-    //     });
-
-    //     const handleTyping = (userName) => {
-    //         setTypingUser(userName);
-    //     };
-
-    //     const handleStopTyping = () => {
-    //         setTypingUser("");
-    //     };
-
-    //     socket.on("offer", async ({ offer }) => {
-    //         console.log("Offer Received");
-
-    //         if (!peerConnection.current) {
-    //             // console.log("Receiver peerconnection NUll");
-    //             console.log("Auto starting voice (receiver)");
-    //             await startVoice();
-
-    //         }
-
-    //         await peerConnection.current.setRemoteDescription(offer);
-
-    //         const answer = await peerConnection.current.createAnswer();
-    //         await peerConnection.current.setLocalDescription(answer);
-
-    //         socket.emit("answer", { roomId, answer });
-    //         console.log("Answer Sent");
-
-    //     });
-
-    //     socket.on("answer", async ({ answer }) => {
-    //         console.log("Answer Received");
-
-    //         await peerConnection.current.setRemoteDescription(answer);
-    //     });
-
-    //     socket.on("ice-candidate", async ({ candidate }) => {
-    //         console.log("ICE Received");
-
-    //         if (!peerConnection.current) return;
-    //         await peerConnection.current.addIceCandidate(candidate);
-    //     });
-
-    //     socket.on("user-typing", handleTyping);
-    //     socket.on("user-stop-typing", handleStopTyping);
-    //     socket.on("code-update", handleCodeUpdate);
-    //     socket.on("receive-message", handleMessage);
-
-    //     return () => {
-    //         socket.off("code-update", handleCodeUpdate);
-    //         socket.off("receive-message", handleMessage);
-    //         socket.off("user-typing", handleTyping);
-    //         socket.off("user-stop-typing", handleStopTyping);
-    //         socket.off("offer");
-    //         socket.off("answer");
-    //         socket.off("ice-candidate");
-    //     };
-    // }, [roomId]);
-
     useEffect(() => {
-
-        // ❌ REMOVE THIS COMPLETELY
-        // setParticipants(...)
 
         socket.emit("join-room", {
             roomId,
@@ -284,11 +202,10 @@ const InterviewRoom = () => {
             setMessages((prev) => [...prev, data]);
         };
 
-        // ✅ FIXED (proper handler)
-        const handleParticipants = (users) => {
+        socket.on("participants-update", (users) => {
             console.log("Participants Updated:", users);
             setParticipants(users);
-        };
+        });
 
         const handleTyping = (userName) => {
             setTypingUser(userName);
@@ -298,18 +215,14 @@ const InterviewRoom = () => {
             setTypingUser("");
         };
 
-        socket.on("participants-update", handleParticipants);
-        socket.on("code-update", handleCodeUpdate);
-        socket.on("receive-message", handleMessage);
-        socket.on("user-typing", handleTyping);
-        socket.on("user-stop-typing", handleStopTyping);
-
         socket.on("offer", async ({ offer }) => {
             console.log("Offer Received");
 
             if (!peerConnection.current) {
-                console.log("❌ Receiver must click Start Voice first");
-                return;
+                // console.log("Receiver peerconnection NUll");
+                console.log("Auto starting voice (receiver)");
+                await startVoice();
+
             }
 
             await peerConnection.current.setRemoteDescription(offer);
@@ -318,27 +231,14 @@ const InterviewRoom = () => {
             await peerConnection.current.setLocalDescription(answer);
 
             socket.emit("answer", { roomId, answer });
+            console.log("Answer Sent");
+
         });
 
         socket.on("answer", async ({ answer }) => {
             console.log("Answer Received");
 
-            const pc = peerConnection.current;
-
-            if (!pc) return;
-
-            // 🔥 only set once
-            if (pc.currentRemoteDescription) {
-                console.log("⚠️ Remote already set");
-                return;
-            }
-
-            if (pc.signalingState !== "have-local-offer") {
-                console.log("⚠️ Skipping duplicate answer");
-                return;
-            }
-
-            await pc.setRemoteDescription(answer);
+            await peerConnection.current.setRemoteDescription(answer);
         });
 
         socket.on("ice-candidate", async ({ candidate }) => {
@@ -348,8 +248,12 @@ const InterviewRoom = () => {
             await peerConnection.current.addIceCandidate(candidate);
         });
 
+        socket.on("user-typing", handleTyping);
+        socket.on("user-stop-typing", handleStopTyping);
+        socket.on("code-update", handleCodeUpdate);
+        socket.on("receive-message", handleMessage);
+
         return () => {
-            socket.off("participants-update", handleParticipants);
             socket.off("code-update", handleCodeUpdate);
             socket.off("receive-message", handleMessage);
             socket.off("user-typing", handleTyping);
@@ -358,8 +262,104 @@ const InterviewRoom = () => {
             socket.off("answer");
             socket.off("ice-candidate");
         };
-
     }, [roomId]);
+
+    // useEffect(() => {
+
+    //     // ❌ REMOVE THIS COMPLETELY
+    //     // setParticipants(...)
+
+    //     socket.emit("join-room", {
+    //         roomId,
+    //         user
+    //     });
+
+    //     // code sync
+    //     const handleCodeUpdate = (newCode) => {
+    //         setCode(newCode);
+    //     };
+
+    //     // chat receive
+    //     const handleMessage = (data) => {
+    //         setMessages((prev) => [...prev, data]);
+    //     };
+
+    //     // ✅ FIXED (proper handler)
+    //     const handleParticipants = (users) => {
+    //         console.log("Participants Updated:", users);
+    //         setParticipants(users);
+    //     };
+
+    //     const handleTyping = (userName) => {
+    //         setTypingUser(userName);
+    //     };
+
+    //     const handleStopTyping = () => {
+    //         setTypingUser("");
+    //     };
+
+    //     socket.on("participants-update", handleParticipants);
+    //     socket.on("code-update", handleCodeUpdate);
+    //     socket.on("receive-message", handleMessage);
+    //     socket.on("user-typing", handleTyping);
+    //     socket.on("user-stop-typing", handleStopTyping);
+
+    //     socket.on("offer", async ({ offer }) => {
+    //         console.log("Offer Received");
+
+    //         if (!peerConnection.current) {
+    //             console.log("❌ Receiver must click Start Voice first");
+    //             return;
+    //         }
+
+    //         await peerConnection.current.setRemoteDescription(offer);
+
+    //         const answer = await peerConnection.current.createAnswer();
+    //         await peerConnection.current.setLocalDescription(answer);
+
+    //         socket.emit("answer", { roomId, answer });
+    //     });
+
+    //     socket.on("answer", async ({ answer }) => {
+    //         console.log("Answer Received");
+
+    //         const pc = peerConnection.current;
+
+    //         if (!pc) return;
+
+    //         // 🔥 only set once
+    //         if (pc.currentRemoteDescription) {
+    //             console.log("⚠️ Remote already set");
+    //             return;
+    //         }
+
+    //         if (pc.signalingState !== "have-local-offer") {
+    //             console.log("⚠️ Skipping duplicate answer");
+    //             return;
+    //         }
+
+    //         await pc.setRemoteDescription(answer);
+    //     });
+
+    //     socket.on("ice-candidate", async ({ candidate }) => {
+    //         console.log("ICE Received");
+
+    //         if (!peerConnection.current) return;
+    //         await peerConnection.current.addIceCandidate(candidate);
+    //     });
+
+    //     return () => {
+    //         socket.off("participants-update", handleParticipants);
+    //         socket.off("code-update", handleCodeUpdate);
+    //         socket.off("receive-message", handleMessage);
+    //         socket.off("user-typing", handleTyping);
+    //         socket.off("user-stop-typing", handleStopTyping);
+    //         socket.off("offer");
+    //         socket.off("answer");
+    //         socket.off("ice-candidate");
+    //     };
+
+    // }, [roomId]);
 
     const handleCodeChange = (e) => {
         const newCode = e.target.value;
